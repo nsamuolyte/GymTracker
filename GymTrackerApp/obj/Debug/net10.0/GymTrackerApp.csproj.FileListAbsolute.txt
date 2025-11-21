@@ -12,3 +12,4 @@
 /Users/nidasamuolyte/C#/GymTracker/GymTrackerApp/obj/Debug/net10.0/GymTrackerApp.pdb
 /Users/nidasamuolyte/C#/GymTracker/GymTrackerApp/obj/Debug/net10.0/GymTrackerApp.genruntimeconfig.cache
 /Users/nidasamuolyte/C#/GymTracker/GymTrackerApp/obj/Debug/net10.0/ref/GymTrackerApp.dll
+/Users/nidasamuolyte/C#/GymTracker/GymTrackerApp/obj/Debug/net10.0/GymTrackerApp.sourcelink.json
