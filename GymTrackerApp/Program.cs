@@ -20,33 +20,35 @@ while (running)
 
     switch (choice)
     {
-        case "1":
+        case var c when c == "1":
             CreateWorkout(service);
             break;
 
-        case "2":
+        case var c when c == "2":
             AddExerciseToWorkout(service);
             break;
 
-        case "3":
+        case var c when c == "3":
             ShowAllWorkouts(service);
             break;
 
-        case "4":
+        case var c when c == "4":
             running = false;
             Console.WriteLine("Exiting...");
             break;
 
+        case null:
+            Console.WriteLine("You entered nothing!");
+            break;
+
         default:
-            Console.WriteLine("Unknown option!");
+            Console.WriteLine($"Unknown option: {choice}");
             break;
     }
 }
 
 
-
-///// --- FUNCTIONS --- /////
-
+// ==================== FUNCTIONS ====================
 
 void CreateWorkout(WorkoutService service)
 {
@@ -62,6 +64,7 @@ void CreateWorkout(WorkoutService service)
 void AddExerciseToWorkout(WorkoutService service)
 {
     var workouts = service.GetAllWorkouts().ToList();
+
     if (workouts.Count == 0)
     {
         Console.WriteLine("No workouts! Create one first.");
@@ -98,21 +101,18 @@ void AddExerciseToWorkout(WorkoutService service)
 
     var machine = machines[machineIndex];
 
-    // ================================
-    //      CARDIO → time + kcal
-    // ================================
+    // -------- CARDIO --------
     if (machine is ExerciseMachine.Bike
         or ExerciseMachine.Treadmill
         or ExerciseMachine.StairStepper)
     {
-        int time = GetNumberInput("Enter time (minutes): ");
-        double kcal = GetDoubleInput("Enter calories burned: ");
+        int minutes = GetNumberInput("Enter time (minutes): ");
+        int kcal = (int)GetDoubleInput("Enter calories burned: ");
 
         var cardio = new Exercise(
             machine: machine,
-            sets: time,     // TEMPORARY: using sets as time
-            reps: 0,
-            weight: kcal    // TEMPORARY: using weight as kcal
+            minutes: minutes,
+            calories: kcal
         );
 
         workout.AddExercise(cardio);
@@ -120,24 +120,24 @@ void AddExerciseToWorkout(WorkoutService service)
         return;
     }
 
-    // ================================
-    //     ABDOMINAL → sets + reps
-    // ================================
-    if (machine is ExerciseMachine.AbdominalCrunch)
+    // -------- ABS --------
+    if (machine == ExerciseMachine.AbdominalCrunch)
     {
         int sets = GetNumberInput("Enter sets: ");
         int reps = GetNumberInput("Enter reps: ");
 
-        var abs = new Exercise(machine, sets, reps, weight: 0);
-        workout.AddExercise(abs);
+        var abs = new Exercise(
+            machine: machine,
+            sets: sets,
+            reps: reps
+        );
 
-        Console.WriteLine($"Abs exercise added! Effort level: {abs.Effort}");
+        workout.AddExercise(abs);
+        Console.WriteLine($"Abs exercise added! Effort: {abs.Effort}");
         return;
     }
 
-    // ================================
-    //       STRENGTH → sets/reps/kg
-    // ================================
+    // -------- STRENGTH --------
     int s = GetNumberInput("Enter sets: ");
     int r = GetNumberInput("Enter reps: ");
     double w = GetDoubleInput("Enter weight (kg): ");
@@ -145,9 +145,8 @@ void AddExerciseToWorkout(WorkoutService service)
     var ex = new Exercise(machine, s, r, w);
     workout.AddExercise(ex);
 
-    Console.WriteLine($"Exercise added! Effort level: {ex.Effort}");
+    Console.WriteLine($"Exercise added! Effort: {ex.Effort}");
 }
-
 
 
 void ShowAllWorkouts(WorkoutService service)
@@ -174,7 +173,8 @@ void ShowAllWorkouts(WorkoutService service)
 }
 
 
-// helpers
+// ============ HELPERS ============
+
 int GetNumberInput(string message)
 {
     Console.Write(message);

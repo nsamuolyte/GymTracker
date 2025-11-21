@@ -1,8 +1,0 @@
-WORKOUT|2025-11-21|Pirmadienis
-EX|LegPress|3|15|15
-EX|LegCurl|3|20|20
-EX|LegExtension|3|20|30
-EX|Abductor|4|20|20
-END
-WORKOUT|2025-11-21|Antradienis
-END

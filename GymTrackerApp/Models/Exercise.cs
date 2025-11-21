@@ -1,6 +1,8 @@
 using System;
+using GymTrackerApp.Utils;
 
 namespace GymTrackerApp.Models
+
 {
     public class Exercise : IFormattable
     {
@@ -52,7 +54,7 @@ namespace GymTrackerApp.Models
                     or ExerciseMachine.ShoulderPress
                     or ExerciseMachine.DeltsMachine
                     or ExerciseMachine.ReverseFly:
-                    
+
                     Sets = sets;
                     Reps = reps;
                     Weight = weight;
@@ -81,16 +83,57 @@ namespace GymTrackerApp.Models
         }
 
         // ------------------ EFFORT LEVEL ------------------
-        private void RecalculateEffort()
+        // ------------------ EFFORT LEVEL (su Range) ------------------
+private void RecalculateEffort()
+{
+    // ===== CARDIO (pagal kalorijas) =====
+    if (Machine is ExerciseMachine.StairStepper
+        or ExerciseMachine.Treadmill
+        or ExerciseMachine.Bike
+        && Calories is int kcal)
+    {
+        Effort = kcal switch
         {
-            Effort = Weight switch
-            {
-                < 20 => EffortLevel.Low,
-                >= 20 and < 40 => EffortLevel.Medium,
-                >= 40 => EffortLevel.High,
-                _ => EffortLevel.Low
-            };
-        }
+            < 100 => EffortLevel.Low,
+            >= 100 and < 200 => EffortLevel.Medium,
+            _ => EffortLevel.High
+        };
+        return;
+    }
+
+    // ===== ABS (pagal REPS su tikru Range tipu) =====
+    if (Machine is ExerciseMachine.AbdominalCrunch && Reps is int r)
+    {
+        Range low = 0..15;
+        Range mid = 15..30;
+        Range high = 30..int.MaxValue;
+
+        Effort = r switch
+        {
+            _ when low.Contains(r) => EffortLevel.Low,
+            _ when mid.Contains(r) => EffortLevel.Medium,
+            _ when high.Contains(r) => EffortLevel.High,
+            _ => EffortLevel.Low
+        };
+        return;
+    }
+
+    // ===== STRENGTH (pagal SVORĮ) =====
+    if (Weight is double w)
+    {
+        Effort = w switch
+        {
+            < 20 => EffortLevel.Low,
+            >= 20 and < 40 => EffortLevel.Medium,
+            _ => EffortLevel.High
+        };
+        return;
+    }
+
+    Effort = EffortLevel.Low;
+}
+
+
 
         // ------------------ MACHINE → TYPE ------------------
         private ExerciseType GetTypeFromMachine(ExerciseMachine machine)
