@@ -98,15 +98,56 @@ void AddExerciseToWorkout(WorkoutService service)
 
     var machine = machines[machineIndex];
 
-    int sets = GetNumberInput("Enter sets: ");
-    int reps = GetNumberInput("Enter reps: ");
-    double weight = GetDoubleInput("Enter weight (kg): ");
+    // ================================
+    //      CARDIO → time + kcal
+    // ================================
+    if (machine is ExerciseMachine.Bike
+        or ExerciseMachine.Treadmill
+        or ExerciseMachine.StairStepper)
+    {
+        int time = GetNumberInput("Enter time (minutes): ");
+        double kcal = GetDoubleInput("Enter calories burned: ");
 
-    var ex = new Exercise(machine, sets, reps, weight);
+        var cardio = new Exercise(
+            machine: machine,
+            sets: time,     // TEMPORARY: using sets as time
+            reps: 0,
+            weight: kcal    // TEMPORARY: using weight as kcal
+        );
+
+        workout.AddExercise(cardio);
+        Console.WriteLine($"Cardio added! Effort level: {cardio.Effort}");
+        return;
+    }
+
+    // ================================
+    //     ABDOMINAL → sets + reps
+    // ================================
+    if (machine is ExerciseMachine.AbdominalCrunch)
+    {
+        int sets = GetNumberInput("Enter sets: ");
+        int reps = GetNumberInput("Enter reps: ");
+
+        var abs = new Exercise(machine, sets, reps, weight: 0);
+        workout.AddExercise(abs);
+
+        Console.WriteLine($"Abs exercise added! Effort level: {abs.Effort}");
+        return;
+    }
+
+    // ================================
+    //       STRENGTH → sets/reps/kg
+    // ================================
+    int s = GetNumberInput("Enter sets: ");
+    int r = GetNumberInput("Enter reps: ");
+    double w = GetDoubleInput("Enter weight (kg): ");
+
+    var ex = new Exercise(machine, s, r, w);
     workout.AddExercise(ex);
 
     Console.WriteLine($"Exercise added! Effort level: {ex.Effort}");
 }
+
 
 
 void ShowAllWorkouts(WorkoutService service)

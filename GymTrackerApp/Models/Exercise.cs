@@ -7,88 +7,155 @@ namespace GymTrackerApp.Models
         public EffortLevel Effort { get; private set; }
         public ExerciseMachine Machine { get; }
         public ExerciseType Type { get; }
-        public int Sets { get; }
-        public int Reps { get; }
-        public double Weight { get; }
 
+        // Strength fields
+        public int? Sets { get; }
+        public int? Reps { get; }
+        public double? Weight { get; }
+
+        // Cardio fields
+        public int? Minutes { get; }
+        public int? Calories { get; }
+
+        // ------------------ CONSTRUCTOR ------------------
         public Exercise(
             ExerciseMachine machine,
-            int sets,
-            int reps,
-            double weight)
+            int sets = 0,
+            int reps = 0,
+            double weight = 0,
+            int minutes = 0,
+            int calories = 0)
         {
             Machine = machine;
             Type = GetTypeFromMachine(machine);
-            Sets = sets;
-            Reps = reps;
-            Weight = weight;
 
-            RecalculateEffort(); // ← AUTOMATIŠKAI APSKAIČIUOJAME
+            // ---- switch + when (pagal treniruoklio tipą) ----
+            switch (machine)
+            {
+                // -------- Strength (reikia sets/reps/weight) --------
+                case ExerciseMachine m when m is
+                    ExerciseMachine.LegPress
+                    or ExerciseMachine.LegCurl
+                    or ExerciseMachine.LegExtension
+                    or ExerciseMachine.Abductor
+                    or ExerciseMachine.Adductor
+                    or ExerciseMachine.MultiHip
+                    or ExerciseMachine.ChestPress
+                    or ExerciseMachine.Pectoral
+                    or ExerciseMachine.Row
+                    or ExerciseMachine.PullDown
+                    or ExerciseMachine.AssistedChinDip
+                    or ExerciseMachine.BackExtension
+                    or ExerciseMachine.TricepsExtension
+                    or ExerciseMachine.BicepsCurl
+                    or ExerciseMachine.ArmCurl
+                    or ExerciseMachine.ShoulderPress
+                    or ExerciseMachine.DeltsMachine
+                    or ExerciseMachine.ReverseFly:
+                    
+                    Sets = sets;
+                    Reps = reps;
+                    Weight = weight;
+                    break;
+
+                // -------- Abs (reikia sets/reps, bet be weight) --------
+                case ExerciseMachine.AbdominalCrunch:
+                    Sets = sets;
+                    Reps = reps;
+                    Weight = null;
+                    break;
+
+                // -------- Cardio (reikia minutes + calories) --------
+                case ExerciseMachine.StairStepper:
+                case ExerciseMachine.Treadmill:
+                case ExerciseMachine.Bike:
+                    Minutes = minutes;
+                    Calories = calories;
+                    break;
+
+                default:
+                    throw new Exception("Unknown machine type.");
+            }
+
+            RecalculateEffort();
         }
 
-        // ------------ Effort logika (switch + when) ------------
+        // ------------------ EFFORT LEVEL ------------------
         private void RecalculateEffort()
         {
             Effort = Weight switch
             {
-                < 20                     => EffortLevel.Low,
-                >= 20 and < 40           => EffortLevel.Medium,
-                >= 40                    => EffortLevel.High,
-                _                        => EffortLevel.Low
+                < 20 => EffortLevel.Low,
+                >= 20 and < 40 => EffortLevel.Medium,
+                >= 40 => EffortLevel.High,
+                _ => EffortLevel.Low
             };
         }
 
-        // ------------ Machine → Type automatinis priskyrimas ------------
+        // ------------------ MACHINE → TYPE ------------------
         private ExerciseType GetTypeFromMachine(ExerciseMachine machine)
         {
             return machine switch
             {
-                ExerciseMachine.LegPress => ExerciseType.Legs,
-                ExerciseMachine.LegCurl => ExerciseType.Legs,
-                ExerciseMachine.LegExtension => ExerciseType.Legs,
-                ExerciseMachine.Abductor => ExerciseType.Legs,
-                ExerciseMachine.Adductor => ExerciseType.Legs,
-                ExerciseMachine.MultiHip => ExerciseType.Legs,
+                // Legs
+                ExerciseMachine.LegPress or
+                ExerciseMachine.LegCurl or
+                ExerciseMachine.LegExtension or
+                ExerciseMachine.Abductor or
+                ExerciseMachine.Adductor or
+                ExerciseMachine.MultiHip
+                    => ExerciseType.Legs,
 
-                ExerciseMachine.ChestPress => ExerciseType.Chest,
-                ExerciseMachine.Pectoral => ExerciseType.Chest,
+                // Chest
+                ExerciseMachine.ChestPress or ExerciseMachine.Pectoral
+                    => ExerciseType.Chest,
 
-                ExerciseMachine.Row => ExerciseType.Back,
-                ExerciseMachine.PullDown => ExerciseType.Back,
-                ExerciseMachine.AssistedChinDip => ExerciseType.Back,
-                ExerciseMachine.BackExtension => ExerciseType.Back,
+                // Back
+                ExerciseMachine.Row or ExerciseMachine.PullDown or
+                ExerciseMachine.AssistedChinDip or ExerciseMachine.BackExtension
+                    => ExerciseType.Back,
 
-                ExerciseMachine.TricepsExtension => ExerciseType.Arms,
-                ExerciseMachine.BicepsCurl => ExerciseType.Arms,
-                ExerciseMachine.ArmCurl => ExerciseType.Arms,
+                // Arms
+                ExerciseMachine.TricepsExtension or ExerciseMachine.BicepsCurl or
+                ExerciseMachine.ArmCurl
+                    => ExerciseType.Arms,
 
-                ExerciseMachine.ShoulderPress => ExerciseType.Shoulders,
-                ExerciseMachine.DeltsMachine => ExerciseType.Shoulders,
-                ExerciseMachine.ReverseFly => ExerciseType.Shoulders,
+                // Shoulders
+                ExerciseMachine.ShoulderPress or ExerciseMachine.DeltsMachine or
+                ExerciseMachine.ReverseFly
+                    => ExerciseType.Shoulders,
 
-                ExerciseMachine.AbdominalCrunch => ExerciseType.Abs,
+                // Abs
+                ExerciseMachine.AbdominalCrunch
+                    => ExerciseType.Abs,
 
-                ExerciseMachine.StairStepper => ExerciseType.Cardio,
-                ExerciseMachine.Treadmill => ExerciseType.Cardio,
-                ExerciseMachine.Bike => ExerciseType.Cardio,
+                // Cardio
+                ExerciseMachine.StairStepper or ExerciseMachine.Treadmill or ExerciseMachine.Bike
+                    => ExerciseType.Cardio,
 
-                _ => ExerciseType.Legs // default
+                _ => ExerciseType.Legs
             };
         }
 
-        // ------------ IFormattable ------------
+        // ------------------ FORMATTING ------------------
         public string ToString(string? format, IFormatProvider? formatProvider)
         {
             return format switch
             {
-                "short" => $"{Machine}: {Sets}x{Reps}",
-                "long" =>
-                    $"{Machine} ({Type}) – {Sets} sets × {Reps} reps @ {Weight}kg — Effort: {Effort}",
+                "short" => $"{Machine}",
+                "long" => ToString(),
                 _ => ToString()
             };
         }
 
         public override string ToString()
-            => $"{Machine} – {Sets}x{Reps} @ {Weight}kg — Effort: {Effort}";
+        {
+            // Strength exercise
+            if (Minutes == null)
+                return $"{Machine} — {Sets}x{Reps} @ {Weight}kg — Effort: {Effort}";
+
+            // Cardio exercise
+            return $"{Machine} — {Minutes} min, {Calories} kcal — Effort: {Effort}";
+        }
     }
 }
