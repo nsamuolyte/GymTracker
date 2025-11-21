@@ -9,30 +9,33 @@ namespace GymTrackerApp.Models
         Abductor,
         Adductor,
         MultiHip,
-        StandingCalfRaise,
-        SeatedCalfRaise,
 
-        // Upper Body
+        // Chest
         ChestPress,
         Pectoral,
-        Pulldown,
+
+        // Back
         Row,
-        ReverseFly,
-        ShoulderPress,
-        ArmCurl,
+        PullDown,
+        AssistedChinDip,
+        BackExtension,
+
+        // Arms
         TricepsExtension,
-        AssistedChin,
-        AssistedDip,
+        BicepsCurl,
+        ArmCurl,
 
-        // Core
+        // Shoulders
+        ShoulderPress,
+        DeltsMachine,
+        ReverseFly,
+
+        // Abs
         AbdominalCrunch,
-        RotaryTorso,
 
-        // Activities
-        Zumba,
-        Pilates,
-        Stretching,
-        Stairmaster,
-        IndoorWalk,
+        // Cardio
+        StairStepper,
+    Treadmill,
+    Bike
     }
 }

@@ -3,12 +3,12 @@ namespace GymTrackerApp.Models
     public enum ExerciseType
     {
         Legs,
-        Back,
         Chest,
-        Shoulders,
+        Back,
         Arms,
-        Core,
+        Shoulders,
+        Abs,
         Cardio,
-        FullBody
+
     }
 }

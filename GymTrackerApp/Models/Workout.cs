@@ -6,9 +6,9 @@ namespace GymTrackerApp.Models
 {
     public class Workout : IEnumerable<Exercise>, IComparable<Workout>, IEquatable<Workout>
     {
-        public DateTime Date { get; set; }
-        public string Title { get; set; }
-        private List<Exercise> _exercises = new();
+        public DateTime Date { get; }
+        public string Title { get; }
+        private readonly List<Exercise> _exercises = new();
 
         public Workout(DateTime date, string title)
         {
@@ -16,33 +16,21 @@ namespace GymTrackerApp.Models
             Title = title;
         }
 
-        public void AddExercise(Exercise exercise)
-        {
-            _exercises.Add(exercise);
-        }
+        public void AddExercise(Exercise ex) => _exercises.Add(ex);
 
-        // IEnumerable
         public IEnumerator<Exercise> GetEnumerator() => _exercises.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        // IComparable (rikiavimas pagal datą)
-        public int CompareTo(Workout other)
-        {
-            if (other == null) return 1;
-            return Date.CompareTo(other.Date);
-        }
+        public int CompareTo(Workout? other)
+            => other == null ? 1 : Date.CompareTo(other.Date);
 
-        // IEquatable (ar tai ta pati treniruotė)
-        public bool Equals(Workout other)
-        {
-            if (other == null) return false;
-            return Date.Date == other.Date.Date;
-        }
+        public bool Equals(Workout? other)
+            => other != null && Date.Date == other.Date.Date;
 
         public override bool Equals(object obj) => Equals(obj as Workout);
-
         public override int GetHashCode() => Date.GetHashCode();
 
-        public override string ToString() => $"{Date:yyyy-MM-dd} - {Title} ({_exercises.Count} exercises)";
+        public override string ToString()
+            => $"{Date:yyyy-MM-dd} – {Title} ({_exercises.Count} exercises)";
     }
 }
