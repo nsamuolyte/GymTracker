@@ -1,0 +1,14 @@
+/Users/nidasamuolyte/C#/GymTracker/GymTrackerApp/bin/Debug/net10.0/GymTrackerApp
+/Users/nidasamuolyte/C#/GymTracker/GymTrackerApp/bin/Debug/net10.0/GymTrackerApp.deps.json
+/Users/nidasamuolyte/C#/GymTracker/GymTrackerApp/bin/Debug/net10.0/GymTrackerApp.runtimeconfig.json
+/Users/nidasamuolyte/C#/GymTracker/GymTrackerApp/bin/Debug/net10.0/GymTrackerApp.dll
+/Users/nidasamuolyte/C#/GymTracker/GymTrackerApp/bin/Debug/net10.0/GymTrackerApp.pdb
+/Users/nidasamuolyte/C#/GymTracker/GymTrackerApp/obj/Debug/net10.0/GymTrackerApp.GeneratedMSBuildEditorConfig.editorconfig
+/Users/nidasamuolyte/C#/GymTracker/GymTrackerApp/obj/Debug/net10.0/GymTrackerApp.AssemblyInfoInputs.cache
+/Users/nidasamuolyte/C#/GymTracker/GymTrackerApp/obj/Debug/net10.0/GymTrackerApp.AssemblyInfo.cs
+/Users/nidasamuolyte/C#/GymTracker/GymTrackerApp/obj/Debug/net10.0/GymTrackerApp.csproj.CoreCompileInputs.cache
+/Users/nidasamuolyte/C#/GymTracker/GymTrackerApp/obj/Debug/net10.0/GymTrackerApp.dll
+/Users/nidasamuolyte/C#/GymTracker/GymTrackerApp/obj/Debug/net10.0/refint/GymTrackerApp.dll
+/Users/nidasamuolyte/C#/GymTracker/GymTrackerApp/obj/Debug/net10.0/GymTrackerApp.pdb
+/Users/nidasamuolyte/C#/GymTracker/GymTrackerApp/obj/Debug/net10.0/GymTrackerApp.genruntimeconfig.cache
+/Users/nidasamuolyte/C#/GymTracker/GymTrackerApp/obj/Debug/net10.0/ref/GymTrackerApp.dll
