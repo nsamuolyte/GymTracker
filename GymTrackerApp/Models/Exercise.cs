@@ -2,20 +2,24 @@ using System;
 using GymTrackerApp.Utils;
 
 namespace GymTrackerApp.Models
-
 {
     public class Exercise : IFormattable
     {
+        // --- DELEGATE (galima pakeisti effort logiką iš išorės) ---
+        public delegate EffortLevel EffortCalculator(Exercise ex);
+        public static EffortCalculator? CalculateEffort { get; set; }
+
         public EffortLevel Effort { get; private set; }
+        public MuscleGroup Groups { get; private set; }
         public ExerciseMachine Machine { get; }
         public ExerciseType Type { get; }
 
-        // Strength fields
+        // Strength
         public int? Sets { get; }
         public int? Reps { get; }
         public double? Weight { get; }
 
-        // Cardio fields
+        // Cardio
         public int? Minutes { get; }
         public int? Calories { get; }
 
@@ -30,11 +34,12 @@ namespace GymTrackerApp.Models
         {
             Machine = machine;
             Type = GetTypeFromMachine(machine);
+            Groups = GetMuscleGroups(machine);
 
-            // ---- switch + when (pagal treniruoklio tipą) ----
+            // --- AUTOMATINIS PARAMETRŲ PARINKIMAS ---
             switch (machine)
             {
-                // -------- Strength (reikia sets/reps/weight) --------
+                // Strength
                 case ExerciseMachine m when m is
                     ExerciseMachine.LegPress
                     or ExerciseMachine.LegCurl
@@ -60,14 +65,14 @@ namespace GymTrackerApp.Models
                     Weight = weight;
                     break;
 
-                // -------- Abs (reikia sets/reps, bet be weight) --------
+                // ABS
                 case ExerciseMachine.AbdominalCrunch:
                     Sets = sets;
                     Reps = reps;
                     Weight = null;
                     break;
 
-                // -------- Cardio (reikia minutes + calories) --------
+                // CARDIO
                 case ExerciseMachine.StairStepper:
                 case ExerciseMachine.Treadmill:
                 case ExerciseMachine.Bike:
@@ -79,64 +84,15 @@ namespace GymTrackerApp.Models
                     throw new Exception("Unknown machine type.");
             }
 
-            RecalculateEffort();
+            // --- EFFORT CALCULATION ---
+            if (CalculateEffort != null)
+                Effort = CalculateEffort(this); // delegate override
+            else
+                RecalculateEffort();             // default logic
         }
 
-        // ------------------ EFFORT LEVEL ------------------
-        // ------------------ EFFORT LEVEL (su Range) ------------------
-private void RecalculateEffort()
-{
-    // ===== CARDIO (pagal kalorijas) =====
-    if (Machine is ExerciseMachine.StairStepper
-        or ExerciseMachine.Treadmill
-        or ExerciseMachine.Bike
-        && Calories is int kcal)
-    {
-        Effort = kcal switch
-        {
-            < 100 => EffortLevel.Low,
-            >= 100 and < 200 => EffortLevel.Medium,
-            _ => EffortLevel.High
-        };
-        return;
-    }
-
-    // ===== ABS (pagal REPS su tikru Range tipu) =====
-    if (Machine is ExerciseMachine.AbdominalCrunch && Reps is int r)
-    {
-        Range low = 0..15;
-        Range mid = 15..30;
-        Range high = 30..int.MaxValue;
-
-        Effort = r switch
-        {
-            _ when low.Contains(r) => EffortLevel.Low,
-            _ when mid.Contains(r) => EffortLevel.Medium,
-            _ when high.Contains(r) => EffortLevel.High,
-            _ => EffortLevel.Low
-        };
-        return;
-    }
-
-    // ===== STRENGTH (pagal SVORĮ) =====
-    if (Weight is double w)
-    {
-        Effort = w switch
-        {
-            < 20 => EffortLevel.Low,
-            >= 20 and < 40 => EffortLevel.Medium,
-            _ => EffortLevel.High
-        };
-        return;
-    }
-
-    Effort = EffortLevel.Low;
-}
-
-
-
-        // ------------------ MACHINE → TYPE ------------------
-        private ExerciseType GetTypeFromMachine(ExerciseMachine machine)
+        // ------------------ MUSCLE GROUPS ------------------
+        private MuscleGroup GetMuscleGroups(ExerciseMachine machine)
         {
             return machine switch
             {
@@ -147,32 +103,127 @@ private void RecalculateEffort()
                 ExerciseMachine.Abductor or
                 ExerciseMachine.Adductor or
                 ExerciseMachine.MultiHip
-                    => ExerciseType.Legs,
+                    => MuscleGroup.Legs,
 
                 // Chest
-                ExerciseMachine.ChestPress or ExerciseMachine.Pectoral
-                    => ExerciseType.Chest,
+                ExerciseMachine.ChestPress or
+                ExerciseMachine.Pectoral
+                    => MuscleGroup.Chest,
 
                 // Back
-                ExerciseMachine.Row or ExerciseMachine.PullDown or
-                ExerciseMachine.AssistedChinDip or ExerciseMachine.BackExtension
-                    => ExerciseType.Back,
+                ExerciseMachine.Row or
+                ExerciseMachine.PullDown or
+                ExerciseMachine.AssistedChinDip or
+                ExerciseMachine.BackExtension
+                    => MuscleGroup.Back,
 
                 // Arms
-                ExerciseMachine.TricepsExtension or ExerciseMachine.BicepsCurl or
+                ExerciseMachine.TricepsExtension or
+                ExerciseMachine.BicepsCurl or
                 ExerciseMachine.ArmCurl
-                    => ExerciseType.Arms,
+                    => MuscleGroup.Arms,
 
                 // Shoulders
-                ExerciseMachine.ShoulderPress or ExerciseMachine.DeltsMachine or
+                ExerciseMachine.ShoulderPress or
+                ExerciseMachine.DeltsMachine or
                 ExerciseMachine.ReverseFly
-                    => ExerciseType.Shoulders,
+                    => MuscleGroup.Shoulders,
 
                 // Abs
                 ExerciseMachine.AbdominalCrunch
+                    => MuscleGroup.Abs,
+
+                // Cardio affects Legs + Cardio group
+                ExerciseMachine.StairStepper
+                    => MuscleGroup.Cardio | MuscleGroup.Legs,
+
+                ExerciseMachine.Treadmill
+                    => MuscleGroup.Cardio | MuscleGroup.Legs,
+
+                ExerciseMachine.Bike
+                    => MuscleGroup.Cardio | MuscleGroup.Legs,
+
+                _ => MuscleGroup.None
+            };
+        }
+        public MuscleGroup GetMuscleGroup()
+        {
+            return GetMuscleGroups(Machine);
+        }
+
+        // ------------------ DEFAULT EFFORT (su RANGE) ------------------
+        private void RecalculateEffort()
+        {
+            // --- CARDIO ---
+            if (Machine is ExerciseMachine.StairStepper or ExerciseMachine.Treadmill or ExerciseMachine.Bike
+                && Calories is int kcal)
+            {
+                Effort = kcal switch
+                {
+                    < 100 => EffortLevel.Low,
+                    >= 100 and < 200 => EffortLevel.Medium,
+                    _ => EffortLevel.High
+                };
+                return;
+            }
+
+            // --- ABS (su tikru Range) ---
+            if (Machine == ExerciseMachine.AbdominalCrunch && Reps is int r)
+            {
+                Range low = 0..15;
+                Range mid = 15..30;
+                Range high = 30..int.MaxValue;
+
+                Effort = r switch
+                {
+                    _ when low.Contains(r) => EffortLevel.Low,
+                    _ when mid.Contains(r) => EffortLevel.Medium,
+                    _ when high.Contains(r) => EffortLevel.High,
+                    _ => EffortLevel.Low
+                };
+                return;
+            }
+
+            // --- STRENGTH (pagal svorį) ---
+            if (Weight is double w)
+            {
+                Effort = w switch
+                {
+                    < 20 => EffortLevel.Low,
+                    >= 20 and < 40 => EffortLevel.Medium,
+                    _ => EffortLevel.High
+                };
+                return;
+            }
+
+            // fallback
+            Effort = EffortLevel.Low;
+        }
+
+        // ------------------ MACHINE → TYPE ------------------
+        private ExerciseType GetTypeFromMachine(ExerciseMachine machine)
+        {
+            return machine switch
+            {
+                ExerciseMachine.LegPress or ExerciseMachine.LegCurl or ExerciseMachine.LegExtension or
+                ExerciseMachine.Abductor or ExerciseMachine.Adductor or ExerciseMachine.MultiHip
+                    => ExerciseType.Legs,
+
+                ExerciseMachine.ChestPress or ExerciseMachine.Pectoral
+                    => ExerciseType.Chest,
+
+                ExerciseMachine.Row or ExerciseMachine.PullDown or ExerciseMachine.AssistedChinDip or ExerciseMachine.BackExtension
+                    => ExerciseType.Back,
+
+                ExerciseMachine.TricepsExtension or ExerciseMachine.BicepsCurl or ExerciseMachine.ArmCurl
+                    => ExerciseType.Arms,
+
+                ExerciseMachine.ShoulderPress or ExerciseMachine.DeltsMachine or ExerciseMachine.ReverseFly
+                    => ExerciseType.Shoulders,
+
+                ExerciseMachine.AbdominalCrunch
                     => ExerciseType.Abs,
 
-                // Cardio
                 ExerciseMachine.StairStepper or ExerciseMachine.Treadmill or ExerciseMachine.Bike
                     => ExerciseType.Cardio,
 
@@ -180,7 +231,7 @@ private void RecalculateEffort()
             };
         }
 
-        // ------------------ FORMATTING ------------------
+        // ------------------ IFormattable ------------------
         public string ToString(string? format, IFormatProvider? formatProvider)
         {
             return format switch
@@ -193,11 +244,9 @@ private void RecalculateEffort()
 
         public override string ToString()
         {
-            // Strength exercise
             if (Minutes == null)
                 return $"{Machine} — {Sets}x{Reps} @ {Weight}kg — Effort: {Effort}";
 
-            // Cardio exercise
             return $"{Machine} — {Minutes} min, {Calories} kcal — Effort: {Effort}";
         }
     }

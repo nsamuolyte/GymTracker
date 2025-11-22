@@ -23,7 +23,7 @@ namespace GymTrackerApp.Services
 
         public void SaveToFile()
         {
-            using var writer = new StreamWriter(FilePath);
+            using var writer = new StreamWriter(FilePath, false);
 
             foreach (var w in _workouts)
             {
@@ -31,31 +31,31 @@ namespace GymTrackerApp.Services
 
                 foreach (var ex in w)
                 {
-                    // STRENGTH
-                    if (ex.Minutes == null)
+                    // ---- CARDIO ----
+                    if (ex.Minutes is not null)
                     {
-                        writer.WriteLine(
-                            $"EX|{ex.Machine}|{ex.Sets}|{ex.Reps}|{ex.Weight}"
-                        );
+                        writer.WriteLine($"EX|{ex.Machine}|C|{ex.Minutes}|{ex.Calories}");
                     }
-                    // CARDIO
+                    // ---- ABS (no weight) ----
+                    else if (ex.Weight is null)
+                    {
+                        writer.WriteLine($"EX|{ex.Machine}|A|{ex.Sets}|{ex.Reps}");
+                    }
+                    // ---- STRENGTH ----
                     else
                     {
-                        writer.WriteLine(
-                            $"EX|{ex.Machine}|{ex.Minutes}|0|{ex.Calories}"
-                        );
+                        writer.WriteLine($"EX|{ex.Machine}|S|{ex.Sets}|{ex.Reps}|{ex.Weight}");
                     }
                 }
 
                 writer.WriteLine("END");
-                writer.WriteLine();
             }
         }
 
-
-
         public void LoadFromFile()
         {
+            _workouts.Clear();
+
             if (!File.Exists(FilePath))
                 return;
 
@@ -67,65 +67,58 @@ namespace GymTrackerApp.Services
                 if (string.IsNullOrWhiteSpace(line))
                     continue;
 
-                // START WORKOUT
-                if (line.StartsWith("WORKOUT|"))
+                var p = line.Split('|');
+
+                // --------------------------
+                // WORKOUT
+                // --------------------------
+                if (p[0] == "WORKOUT")
                 {
-                    var parts = line.Split('|');
-                    if (parts.Length < 3) continue;
-
-                    if (!DateTime.TryParse(parts[1], out var date))
-                        continue;
-
-                    current = new Workout(date, parts[2]);
+                    var date = DateTime.Parse(p[1]);
+                    var title = p[2];
+                    current = new Workout(date, title);
                     _workouts.Add(current);
                 }
 
+                // --------------------------
                 // EXERCISE
-                else if (line.StartsWith("EX|") && current != null)
+                // --------------------------
+                else if (p[0] == "EX" && current != null)
                 {
-                    var p = line.Split('|');
-                    if (p.Length < 5) continue;
+                    var machine = Enum.Parse<ExerciseMachine>(p[1]);
+                    var type = p[2]; // S / A / C
 
-                    if (!Enum.TryParse<ExerciseMachine>(p[1], out var machine))
-                        continue;
-
-                    int.TryParse(p[2], out int setsOrMin);
-                    int.TryParse(p[3], out int reps);
-                    double.TryParse(p[4], out double weightOrKcal);
-
-                    Exercise ex;
-
-                    // CARDIO (minutes > 0 and reps == 0)
-                    if (machine is ExerciseMachine.Bike
-                        or ExerciseMachine.StairStepper
-                        or ExerciseMachine.Treadmill)
+                    Exercise ex = type switch
                     {
-                        ex = new Exercise(
-                            machine,
-                            minutes: setsOrMin,
-                            calories: (int)weightOrKcal
-                        );
-                    }
-                    // ABS
-                    else if (machine == ExerciseMachine.AbdominalCrunch)
-                    {
-                        ex = new Exercise(
-                            machine,
-                            sets: setsOrMin,
-                            reps: reps
-                        );
-                    }
-                    // STRENGTH
-                    else
-                    {
-                        ex = new Exercise(machine, setsOrMin, reps, weightOrKcal);
-                    }
+                        // Strength
+                        "S" => new Exercise(
+                                    machine,
+                                    int.Parse(p[3]),
+                                    int.Parse(p[4]),
+                                    double.Parse(p[5])),
+
+                        // Abs
+                        "A" => new Exercise(
+                                    machine,
+                                    int.Parse(p[3]),
+                                    int.Parse(p[4])),
+
+                        // Cardio
+                        "C" => new Exercise(
+                                    machine,
+                                    minutes: int.Parse(p[3]),
+                                    calories: int.Parse(p[4])),
+
+                        _ => throw new Exception("Unknown EX type")
+                    };
 
                     current.AddExercise(ex);
                 }
 
-                // END WORKOUT
-                else if (line == "END")
+                // --------------------------
+                // END
+                // --------------------------
+                else if (p[0] == "END")
                 {
                     current = null;
                 }

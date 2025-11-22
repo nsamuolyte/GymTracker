@@ -145,6 +145,8 @@ void AddExerciseToWorkout(WorkoutService service)
     var ex = new Exercise(machine, s, r, w);
     workout.AddExercise(ex);
 
+    service.SaveToFile();
+
     Console.WriteLine($"Exercise added! Effort: {ex.Effort}");
 }
 
@@ -165,12 +167,21 @@ void ShowAllWorkouts(WorkoutService service)
     {
         Console.WriteLine(w);
 
+        MuscleGroup totalGroups = MuscleGroup.None;
+
         foreach (var ex in w)
+        {
             Console.WriteLine("  • " + ex.ToString("long", null));
 
+            // Bitwise flag — pridedame grupę
+            totalGroups |= ex.GetMuscleGroup();
+        }
+
+        Console.WriteLine($"Muscle groups trained: {totalGroups}");
         Console.WriteLine();
     }
 }
+
 
 
 // ============ HELPERS ============
