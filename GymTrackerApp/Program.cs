@@ -2,7 +2,7 @@
 using GymTrackerApp.Services;
 using System.Linq;
 
-// sukuria servisą
+// sukuria servisą (LOAD iš failo)
 var service = new WorkoutService();
 
 bool running = true;
@@ -13,32 +13,39 @@ while (running)
     Console.WriteLine("1. Create new workout");
     Console.WriteLine("2. Add exercise to workout");
     Console.WriteLine("3. View all workouts");
-    Console.WriteLine("4. Exit");
+    Console.WriteLine("4. Set exercise filter");
+    Console.WriteLine("5. Clear filter");
+    Console.WriteLine("6. Exit");
     Console.Write("Choose: ");
 
-    string? choice = Console.ReadLine();
+    string? choice = Console.ReadLine()?.Trim();
 
     switch (choice)
     {
-        case var c when c == "1":
+        case "1":
             CreateWorkout(service);
             break;
 
-        case var c when c == "2":
+        case "2":
             AddExerciseToWorkout(service);
             break;
 
-        case var c when c == "3":
+        case "3":
             ShowAllWorkouts(service);
             break;
 
-        case var c when c == "4":
-            running = false;
-            Console.WriteLine("Exiting...");
+        case "4":
+            SetFilter(service);
             break;
 
-        case null:
-            Console.WriteLine("You entered nothing!");
+        case "5":
+            service.Filter = null;
+            Console.WriteLine("Filter cleared!");
+            break;
+
+        case "6":
+            running = false;
+            Console.WriteLine("Exiting...");
             break;
 
         default:
@@ -85,23 +92,55 @@ void AddExerciseToWorkout(WorkoutService service)
 
     var workout = workouts[index];
 
-    Console.WriteLine("\nChoose machine:");
-    var machines = Enum.GetValues<ExerciseMachine>();
+    // ================================
+    // 1) GAUNAM VISUS ĮRANKIUS
+    // ================================
+    var allMachines = Enum.GetValues<ExerciseMachine>().ToList();
 
-    for (int i = 0; i < machines.Length; i++)
-        Console.WriteLine($"{i + 1}. {machines[i]}");
+    // ================================
+    // 2) JEIGU YRA FILTRAS → FILTRUOJAM
+    // ================================
+    if (service.Filter != null)
+    {
+        allMachines = allMachines
+            .Where(m => 
+            {
+                // Sukuriame "fake exercise" tik tam,
+                // kad galėtume panaudoti filtrą
+                var fake = new Exercise(m);
+                return service.Filter(fake);
+            })
+            .ToList();
+    }
+
+    // Jei po filtravimo neliko mašinų
+    if (allMachines.Count == 0)
+    {
+        Console.WriteLine("No exercises match your filter. Clear filter first.");
+        return;
+    }
+
+    // ================================
+    // 3) RODOME FILTRUOTĄ SĄRAŠĄ
+    // ================================
+    Console.WriteLine("\nChoose machine:");
+
+    for (int i = 0; i < allMachines.Count; i++)
+        Console.WriteLine($"{i + 1}. {allMachines[i]}");
 
     int machineIndex = GetNumberInput("Enter number: ") - 1;
 
-    if (machineIndex < 0 || machineIndex >= machines.Length)
+    if (machineIndex < 0 || machineIndex >= allMachines.Count)
     {
         Console.WriteLine("Invalid machine!");
         return;
     }
 
-    var machine = machines[machineIndex];
+    var machine = allMachines[machineIndex];
 
-    // -------- CARDIO --------
+    // ================================
+    // CARDIO
+    // ================================
     if (machine is ExerciseMachine.Bike
         or ExerciseMachine.Treadmill
         or ExerciseMachine.StairStepper)
@@ -109,35 +148,33 @@ void AddExerciseToWorkout(WorkoutService service)
         int minutes = GetNumberInput("Enter time (minutes): ");
         int kcal = (int)GetDoubleInput("Enter calories burned: ");
 
-        var cardio = new Exercise(
-            machine: machine,
-            minutes: minutes,
-            calories: kcal
-        );
-
+        var cardio = new Exercise(machine, minutes: minutes, calories: kcal);
         workout.AddExercise(cardio);
-        Console.WriteLine($"Cardio added! Effort level: {cardio.Effort}");
+
+        service.SaveToFile();
+        Console.WriteLine($"Cardio added! Effort: {cardio.Effort}");
         return;
     }
 
-    // -------- ABS --------
+    // ================================
+    // ABS
+    // ================================
     if (machine == ExerciseMachine.AbdominalCrunch)
     {
         int sets = GetNumberInput("Enter sets: ");
         int reps = GetNumberInput("Enter reps: ");
 
-        var abs = new Exercise(
-            machine: machine,
-            sets: sets,
-            reps: reps
-        );
-
+        var abs = new Exercise(machine, sets: sets, reps: reps);
         workout.AddExercise(abs);
-        Console.WriteLine($"Abs exercise added! Effort: {abs.Effort}");
+
+        service.SaveToFile();
+        Console.WriteLine($"Abs added! Effort: {abs.Effort}");
         return;
     }
 
-    // -------- STRENGTH --------
+    // ================================
+    // STRENGTH
+    // ================================
     int s = GetNumberInput("Enter sets: ");
     int r = GetNumberInput("Enter reps: ");
     double w = GetDoubleInput("Enter weight (kg): ");
@@ -146,10 +183,34 @@ void AddExerciseToWorkout(WorkoutService service)
     workout.AddExercise(ex);
 
     service.SaveToFile();
-
     Console.WriteLine($"Exercise added! Effort: {ex.Effort}");
 }
 
+void SetFilter(WorkoutService service)
+{
+    Console.WriteLine("\nChoose filter:");
+    Console.WriteLine("1. Only Chest");
+    Console.WriteLine("2. Only Cardio");
+    Console.WriteLine("3. Only Heavy (>40 kg)");
+    Console.WriteLine("4. Only Abs");
+    Console.Write("Choose: ");
+
+    string? choice = Console.ReadLine()?.Trim();
+
+    service.Filter = choice switch
+    {
+        "1" => ex => ex.Type == ExerciseType.Chest,
+        "2" => ex => ex.Type == ExerciseType.Cardio,
+        "3" => ex => ex.Weight is double w && w > 40,
+        "4" => ex => ex.Type == ExerciseType.Abs,
+        _ => null
+    };
+
+    Console.WriteLine("Filter applied!");
+}
+
+
+// ==================== SHOW ALL WORKOUTS ====================
 
 void ShowAllWorkouts(WorkoutService service)
 {
@@ -171,9 +232,14 @@ void ShowAllWorkouts(WorkoutService service)
 
         foreach (var ex in w)
         {
-            Console.WriteLine("  • " + ex.ToString("long", null));
+            // ---- FILTRO TAIKYMAS (pataisyta) ----
+            if (service.Filter == null || service.Filter(ex))
+            {
+                // TAVO REIKALAVIMAS — lieka neliestas
+                Console.WriteLine("  • " + (ex?.ToString("long", null) ?? "UNKNOWN EXERCISE"));
+            }
 
-            // Bitwise flag — pridedame grupę
+            // Bitwise
             totalGroups |= ex.GetMuscleGroup();
         }
 
@@ -183,19 +249,24 @@ void ShowAllWorkouts(WorkoutService service)
 }
 
 
-
-// ============ HELPERS ============
+// ==================== HELPERS ====================
 
 int GetNumberInput(string message)
 {
     Console.Write(message);
-    int.TryParse(Console.ReadLine(), out int value);
+
+    if (!int.TryParse(Console.ReadLine(), out int value))
+        return -1;
+
     return value;
 }
 
 double GetDoubleInput(string msg)
 {
     Console.Write(msg);
-    double.TryParse(Console.ReadLine(), out double value);
+
+    if (!double.TryParse(Console.ReadLine(), out double value))
+        return 0;
+
     return value;
 }

@@ -5,6 +5,11 @@ namespace GymTrackerApp.Services
 {
     public class WorkoutService
     {
+        public delegate bool ExerciseFilter(Exercise ex);
+
+        // Naudotojo parinktas filtras
+        public ExerciseFilter? Filter { get; set; }
+
         private const string FilePath = "workouts.txt";
         private readonly List<Workout> _workouts = new();
 

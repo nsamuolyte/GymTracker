@@ -1,0 +1,5 @@
+WORKOUT|2025-11-22|Pirmadienis
+EX|ChestPress|S|4|20|20
+EX|Pectoral|S|3|25|10
+EX|Bike|C|20|240
+END
