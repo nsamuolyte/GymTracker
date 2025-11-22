@@ -13,3 +13,5 @@ WORKOUT|2025-11-22|Ketvirtadienis
 EX|ChestPress|S|3|20|15
 EX|Bike|C|25|300
 END
+WORKOUT|2025-09-01|Pirmadienis
+END

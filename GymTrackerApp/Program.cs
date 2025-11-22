@@ -60,13 +60,31 @@ while (running)
 void CreateWorkout(WorkoutService service)
 {
     Console.Write("Enter workout title: ");
-    string title = Console.ReadLine() ?? "Untitled";
+    string title = Console.ReadLine();
+    title ??= "Untitled";  // reikalavimas: ??=
 
-    var w = new Workout(DateTime.Now, title);
+    // ---- Enter date ----
+    Console.Write("Enter workout date (yyyy-MM-dd): ");
+    string? input = Console.ReadLine()?.Trim();  // reikalavimas: ?.
+
+    DateTime date;
+
+    // ---- Validation loop ----
+    while (!DateTime.TryParse(input, out date) || date > DateTime.Today)
+    {
+        Console.WriteLine("Invalid date! Cannot be in the future.");
+        Console.Write("Enter workout date (yyyy-MM-dd): ");
+
+        input = Console.ReadLine()?.Trim();
+        input ??= "";  // reikalavimas: ??=
+    }
+
+    var w = new Workout(date, title);
     service.AddWorkout(w);
 
     Console.WriteLine("Workout created!");
 }
+
 
 void AddExerciseToWorkout(WorkoutService service)
 {
