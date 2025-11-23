@@ -7,16 +7,13 @@ namespace GymTrackerApp.Services
     {
         public delegate bool ExerciseFilter(Exercise ex);
 
-        // Naudotojo parinktas filtras
         public ExerciseFilter? Filter { get; set; }
 
         private const string FilePath = "workouts.txt";
         private readonly List<Workout> _workouts = new();
 
-        public WorkoutService()
-        {
-            LoadFromFile();
-        }
+        public WorkoutService(){ LoadFromFile(); }
+
 
         public IEnumerable<Workout> GetAllWorkouts() => _workouts;
 
@@ -36,21 +33,15 @@ namespace GymTrackerApp.Services
 
                 foreach (var ex in w)
                 {
-                    // ---- CARDIO ----
-                    if (ex.Minutes is not null)
-                    {
+                    
+                    if (ex.Minutes is not null) // Cardio
                         writer.WriteLine($"EX|{ex.Machine}|C|{ex.Minutes}|{ex.Calories}");
-                    }
-                    // ---- ABS (no weight) ----
-                    else if (ex.Weight is null)
-                    {
+                    
+                    else if (ex.Weight is null) // ABS
                         writer.WriteLine($"EX|{ex.Machine}|A|{ex.Sets}|{ex.Reps}");
-                    }
-                    // ---- STRENGTH ----
-                    else
-                    {
+                    
+                    else // Kiti pratimai (Strength)
                         writer.WriteLine($"EX|{ex.Machine}|S|{ex.Sets}|{ex.Reps}|{ex.Weight}");
-                    }
                 }
 
                 writer.WriteLine("END");
@@ -74,9 +65,6 @@ namespace GymTrackerApp.Services
 
                 var p = line.Split('|');
 
-                // --------------------------
-                // WORKOUT
-                // --------------------------
                 if (p[0] == "WORKOUT")
                 {
                     var date = DateTime.Parse(p[1]);
@@ -85,30 +73,24 @@ namespace GymTrackerApp.Services
                     _workouts.Add(current);
                 }
 
-                // --------------------------
-                // EXERCISE
-                // --------------------------
                 else if (p[0] == "EX" && current != null)
                 {
                     var machine = Enum.Parse<ExerciseMachine>(p[1]);
-                    var type = p[2]; // S / A / C
+                    var type = p[2];
 
                     Exercise ex = type switch
                     {
-                        // Strength
                         "S" => new Exercise(
                                     machine,
                                     int.Parse(p[3]),
                                     int.Parse(p[4]),
                                     double.Parse(p[5])),
 
-                        // Abs
                         "A" => new Exercise(
                                     machine,
                                     int.Parse(p[3]),
                                     int.Parse(p[4])),
 
-                        // Cardio
                         "C" => new Exercise(
                                     machine,
                                     minutes: int.Parse(p[3]),
@@ -119,10 +101,6 @@ namespace GymTrackerApp.Services
 
                     current.AddExercise(ex);
                 }
-
-                // --------------------------
-                // END
-                // --------------------------
                 else if (p[0] == "END")
                 {
                     current = null;

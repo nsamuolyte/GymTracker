@@ -8,10 +8,15 @@ EX|Bike|C|24|350
 END
 WORKOUT|2025-11-22|Treciadienis
 EX|LegPress|S|3|20|20
+EX|ShoulderPress|S|3|10|10
 END
 WORKOUT|2025-11-22|Ketvirtadienis
 EX|ChestPress|S|3|20|15
 EX|Bike|C|25|300
 END
 WORKOUT|2025-09-01|Pirmadienis
+END
+WORKOUT|2025-09-02|Antradienis
+EX|PullDown|S|3|30|10
+EX|Bike|C|20|380
 END

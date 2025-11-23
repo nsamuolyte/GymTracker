@@ -5,7 +5,6 @@ namespace GymTrackerApp.Models
 {
     public class Exercise : IFormattable
     {
-        // --- DELEGATE (galima pakeisti effort logiką iš išorės) ---
         public delegate EffortLevel EffortCalculator(Exercise ex);
         public static EffortCalculator? CalculateEffort { get; set; }
 
@@ -14,32 +13,25 @@ namespace GymTrackerApp.Models
         public ExerciseMachine Machine { get; }
         public ExerciseType Type { get; }
 
-        // Strength
+        // paprastu pratimu parametrai
         public int? Sets { get; }
         public int? Reps { get; }
         public double? Weight { get; }
 
-        // Cardio
+        // cardio pratimu parametrai
         public int? Minutes { get; }
         public int? Calories { get; }
 
-        // ------------------ CONSTRUCTOR ------------------
-        public Exercise(
-            ExerciseMachine machine,
-            int sets = 0,
-            int reps = 0,
-            double weight = 0,
-            int minutes = 0,
-            int calories = 0)
+
+        // Treniruokliai pagal tipus
+        public Exercise( ExerciseMachine machine, int sets = 0, int reps = 0, double weight = 0, int minutes = 0, int calories = 0)
         {
             Machine = machine;
             Type = GetTypeFromMachine(machine);
             Groups = GetMuscleGroups(machine);
 
-            // --- AUTOMATINIS PARAMETRŲ PARINKIMAS ---
             switch (machine)
             {
-                // Strength
                 case ExerciseMachine m when m is
                     ExerciseMachine.LegPress
                     or ExerciseMachine.LegCurl
@@ -65,14 +57,12 @@ namespace GymTrackerApp.Models
                     Weight = weight;
                     break;
 
-                // ABS
                 case ExerciseMachine.AbdominalCrunch:
                     Sets = sets;
                     Reps = reps;
                     Weight = null;
                     break;
 
-                // CARDIO
                 case ExerciseMachine.StairStepper:
                 case ExerciseMachine.Treadmill:
                 case ExerciseMachine.Bike:
@@ -84,14 +74,13 @@ namespace GymTrackerApp.Models
                     throw new Exception("Unknown machine type.");
             }
 
-            // --- EFFORT CALCULATION ---
             if (CalculateEffort != null)
-                Effort = CalculateEffort(this); // delegate override
+                Effort = CalculateEffort(this);
             else
-                RecalculateEffort();             // default logic
+                RecalculateEffort();
         }
 
-        // ------------------ MUSCLE GROUPS ------------------
+        // Treniruoklai pagal raumenų grupes
         private MuscleGroup GetMuscleGroups(ExerciseMachine machine)
         {
             return machine switch
@@ -146,12 +135,7 @@ namespace GymTrackerApp.Models
                 _ => MuscleGroup.None
             };
         }
-        public MuscleGroup GetMuscleGroup()
-        {
-            return GetMuscleGroups(Machine);
-        }
-
-        // ------------------ DEFAULT EFFORT (su RANGE) ------------------
+        public MuscleGroup GetMuscleGroup(){return GetMuscleGroups(Machine);}
         private void RecalculateEffort()
         {
             // --- CARDIO ---
@@ -167,7 +151,6 @@ namespace GymTrackerApp.Models
                 return;
             }
 
-            // --- ABS (su tikru Range) ---
             if (Machine == ExerciseMachine.AbdominalCrunch && Reps is int r)
             {
                 Range low = 0..15;
@@ -184,7 +167,6 @@ namespace GymTrackerApp.Models
                 return;
             }
 
-            // --- STRENGTH (pagal svorį) ---
             if (Weight is double w)
             {
                 Effort = w switch
@@ -195,12 +177,9 @@ namespace GymTrackerApp.Models
                 };
                 return;
             }
-
-            // fallback
             Effort = EffortLevel.Low;
         }
 
-        // ------------------ MACHINE → TYPE ------------------
         private ExerciseType GetTypeFromMachine(ExerciseMachine machine)
         {
             return machine switch
@@ -231,7 +210,6 @@ namespace GymTrackerApp.Models
             };
         }
 
-        // ------------------ IFormattable ------------------
         public string ToString(string? format, IFormatProvider? formatProvider)
         {
             return format switch

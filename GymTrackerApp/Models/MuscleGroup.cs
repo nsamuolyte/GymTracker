@@ -12,8 +12,7 @@ namespace GymTrackerApp.Models
         Abs      = 1 << 5,  // 32
         Cardio   = 1 << 6,  // 64
 
-        // Combined presets
-        Core     = Back | Abs,          // 4 + 32 = 36
+        Core     = Back | Abs, 
         UpperBody= Chest | Back | Arms | Shoulders,
         LowerBody= Legs,
         FullBody = Legs | Chest | Back | Abs | Arms | Shoulders
