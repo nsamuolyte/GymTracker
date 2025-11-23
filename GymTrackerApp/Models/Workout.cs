@@ -12,12 +12,16 @@ namespace GymTrackerApp.Models
 
         private List<Exercise> _exercises = new();
 
+        // Vienintelis teisingas sąrašas
+        public List<string> GroupTrainings { get; } = new();
+
         public Workout(DateTime date, string title)
         {
             Date = date;
             Title = title ?? "Untitled";
         }
 
+        // Copy konstruktorius (naudojamas Undo/Redo)
         public Workout(Workout other)
         {
             Date = other.Date;
@@ -26,8 +30,22 @@ namespace GymTrackerApp.Models
             _exercises = other._exercises
                 .Select(e => new Exercise(e))
                 .ToList();
+
+            GroupTrainings = new List<string>(other.GroupTrainings);
         }
 
+        // ================= GROUP TRAININGS =================
+
+        public void AddGroupTrainings(params string[] groups)
+        {
+            foreach (var g in groups)
+            {
+                if (!string.IsNullOrWhiteSpace(g))
+                    GroupTrainings.Add(g.Trim());
+            }
+        }
+
+        // ================= EXERCISES =================
 
         public void AddExercise(Exercise ex)
         {
@@ -47,6 +65,7 @@ namespace GymTrackerApp.Models
                     _exercises.Add(ex);
         }
 
+        // ================= OPERATORS =================
 
         public static Workout operator +(Workout w, Exercise ex)
         {
@@ -60,11 +79,13 @@ namespace GymTrackerApp.Models
             return w;
         }
 
-        public void Deconstruct(out DateTime date, out string title, out int exerciseCount)
+        // ================= UTILITY =================
+
+        public void Deconstruct(out DateTime date, out string title, out int count)
         {
             date = Date;
             title = Title;
-            exerciseCount = _exercises.Count;
+            count = _exercises.Count;
         }
 
         public IEnumerator<Exercise> GetEnumerator() => _exercises.GetEnumerator();
@@ -83,6 +104,12 @@ namespace GymTrackerApp.Models
             => Date.GetHashCode();
 
         public override string ToString()
-            => $"{Date:yyyy-MM-dd} – {Title} ({_exercises.Count} exercises)";
+        {
+            string groups = GroupTrainings.Count == 0
+                ? ""
+                : $" | Groups: {string.Join(", ", GroupTrainings)}";
+
+            return $"{Date:yyyy-MM-dd} – {Title} ({_exercises.Count} exercises){groups}";
+        }
     }
 }

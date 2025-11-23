@@ -231,12 +231,15 @@ namespace GymTrackerApp.Models
             };
         }
 
+        
+
         public override string ToString()
         {
             if (Minutes == null)
                 return $"{Machine} — {Sets}x{Reps} @ {Weight}kg — Effort: {Effort}";
 
             return $"{Machine} — {Minutes} min, {Calories} kcal — Effort: {Effort}";
+            
         }
     }
 }

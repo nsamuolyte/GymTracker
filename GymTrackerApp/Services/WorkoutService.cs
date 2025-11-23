@@ -31,6 +31,9 @@ namespace GymTrackerApp.Services
             {
                 writer.WriteLine($"WORKOUT|{w.Date:yyyy-MM-dd}|{w.Title}");
 
+                if (w.GroupTrainings.Count > 0)
+                    writer.WriteLine("GROUP|" + string.Join(',', w.GroupTrainings));
+
                 foreach (var ex in w)
                 {
 
@@ -73,6 +76,12 @@ namespace GymTrackerApp.Services
                     _workouts.Add(current);
                 }
 
+                else if (p[0] == "GROUP" && current != null)
+                {
+                    var items = p[1].Split(',', StringSplitOptions.RemoveEmptyEntries);
+                    current.AddGroupTrainings(items);
+                }
+
                 else if (p[0] == "EX" && current != null)
                 {
                     var machine = Enum.Parse<ExerciseMachine>(p[1]);
@@ -101,6 +110,7 @@ namespace GymTrackerApp.Services
 
                     current.AddExercise(ex);
                 }
+                
                 else if (p[0] == "END")
                 {
                     current = null;

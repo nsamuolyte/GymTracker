@@ -16,10 +16,11 @@ while (running)
     Console.WriteLine("3. View all workouts");
     Console.WriteLine("4. Set exercise filter");
     Console.WriteLine("5. Clear filter");
-    Console.WriteLine("6. Exit");
+    Console.WriteLine("6. Add group training");
     Console.WriteLine("7. Remove exercise");
     Console.WriteLine("8. Undo");
     Console.WriteLine("9. Redo");
+    Console.WriteLine("10. Exit");
     Console.Write("Choose: ");
 
     string? choice = Console.ReadLine()?.Trim();
@@ -31,10 +32,12 @@ while (running)
         case "3": ShowAllWorkouts(service); break;
         case "4": SetFilter(service); break;
         case "5": service.Filter = null; Console.WriteLine("Filter cleared!"); break;
-        case "6": running = false; Console.WriteLine("Exiting..."); break;
+        case "6": AddGroupTraining(service); break;
         case "7": RemoveExerciseFromWorkout(service); break;
         case "8": Undo(); break;
         case "9": Redo(); break;
+        case "10": running = false; Console.WriteLine("Exiting..."); break;
+
         default: Console.WriteLine($"Unknown option: {choice}"); break;
     }
 }
@@ -240,6 +243,11 @@ void ShowAllWorkouts(WorkoutService service)
     {
         var (date, title, count) = w;
         Console.WriteLine($"{date:yyyy-MM-dd} – {title} ({count} exercises)");
+        if (w.GroupTrainings.Count > 0)
+        {
+            Console.WriteLine($"  Group trainings: {string.Join(", ", w.GroupTrainings)}");
+        }
+
 
         MuscleGroup totalGroups = MuscleGroup.None;
 
@@ -294,3 +302,72 @@ double GetDoubleInput(string msg)
     Console.Write(msg);
     return double.TryParse(Console.ReadLine(), out double value) ? value : 0;
 }
+
+void AddGroupTraining(WorkoutService service)
+{
+    var workouts = service.GetAllWorkouts().ToList();
+
+    if (workouts.Count == 0)
+    {
+        Console.WriteLine("No workouts found.");
+        return;
+    }
+
+    Console.WriteLine("\nChoose workout:");
+    for (int i = 0; i < workouts.Count; i++)
+        Console.WriteLine($"{i + 1}. {workouts[i].Title}");
+
+    int wIndex = GetNumberInput("Enter number: ") - 1;
+    if (wIndex < 0 || wIndex >= workouts.Count)
+    {
+        Console.WriteLine("Invalid selection.");
+        return;
+    }
+
+    var workout = workouts[wIndex];
+
+    Console.WriteLine("\nChoose group training:");
+    Console.WriteLine("1. Yoga");
+    Console.WriteLine("2. Zumba");
+    Console.WriteLine("3. Pilates");
+    Console.WriteLine("4. Multiple (comma separated: yoga,zumba)");
+
+    Console.Write("Choose: ");
+    string? input = Console.ReadLine()?.Trim();
+
+    if (string.IsNullOrWhiteSpace(input))
+    {
+        Console.WriteLine("Invalid.");
+        return;
+    }
+
+    undoRedo.SaveState(service.GetAllWorkouts());
+
+    string[] groups = input switch
+    {
+        "1" => new[] { "Yoga" },
+        "2" => new[] { "Zumba" },
+        "3" => new[] { "Pilates" },
+        "4" => AskMultipleGroups(),
+        _ => input.Split(',').Select(g => g.Trim()).ToArray()
+    };
+
+    workout.AddGroupTrainings(groups);
+
+    service.SaveToFile();
+    Console.WriteLine("Group training added.");
+}
+
+string[] AskMultipleGroups()
+{
+    Console.Write("Enter groups (comma separated): ");
+    string? input = Console.ReadLine();
+
+    return input?
+        .Split(',')
+        .Select(g => g.Trim())
+        .Where(g => g.Length > 0)
+        .ToArray()
+        ?? Array.Empty<string>();
+}
+

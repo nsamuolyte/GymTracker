@@ -1,4 +1,5 @@
 WORKOUT|2025-11-22|Pirmadienis
+GROUP|Yoga
 EX|ChestPress|S|4|20|20
 EX|Pectoral|S|3|25|10
 EX|Bike|C|20|240
@@ -7,4 +8,5 @@ WORKOUT|2025-09-03|Treciadienis
 EX|Bike|C|20|300
 END
 WORKOUT|2025-09-05|Penktadienis
+GROUP|Zumba,yoga,zumba
 END
