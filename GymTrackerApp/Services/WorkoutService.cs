@@ -12,7 +12,7 @@ namespace GymTrackerApp.Services
         private const string FilePath = "workouts.txt";
         private readonly List<Workout> _workouts = new();
 
-        public WorkoutService(){ LoadFromFile(); }
+        public WorkoutService() { LoadFromFile(); }
 
 
         public IEnumerable<Workout> GetAllWorkouts() => _workouts;
@@ -33,13 +33,13 @@ namespace GymTrackerApp.Services
 
                 foreach (var ex in w)
                 {
-                    
+
                     if (ex.Minutes is not null) // Cardio
                         writer.WriteLine($"EX|{ex.Machine}|C|{ex.Minutes}|{ex.Calories}");
-                    
+
                     else if (ex.Weight is null) // ABS
                         writer.WriteLine($"EX|{ex.Machine}|A|{ex.Sets}|{ex.Reps}");
-                    
+
                     else // Kiti pratimai (Strength)
                         writer.WriteLine($"EX|{ex.Machine}|S|{ex.Sets}|{ex.Reps}|{ex.Weight}");
                 }
@@ -107,5 +107,14 @@ namespace GymTrackerApp.Services
                 }
             }
         }
+        public void ReplaceWorkouts(List<Workout> newWorkouts)
+        {
+            if (newWorkouts == null)
+                return;
+
+            _workouts.Clear();
+            _workouts.AddRange(newWorkouts);
+        }
+
     }
 }

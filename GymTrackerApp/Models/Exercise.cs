@@ -210,6 +210,17 @@ namespace GymTrackerApp.Models
             };
         }
 
+        public Exercise(Exercise other)
+{
+    Machine = other.Machine;
+    Sets = other.Sets;
+    Reps = other.Reps;
+    Weight = other.Weight;
+    Minutes = other.Minutes;
+    Calories = other.Calories;
+}
+
+
         public string ToString(string? format, IFormatProvider? formatProvider)
         {
             return format switch
